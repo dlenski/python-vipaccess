@@ -15,6 +15,7 @@ Main differences:
   version on the VIP Access tokens; as far as I can tell there is no
   real difference between them, but some clients require one or the
   other specifically.
+- Provision HOTP Tokens (`VSMB`)
 - Command-line utility is expanded to support *both* token
   provisioning (creating a new token) and emitting codes for an
   existing token (inspired by the command-line interface of
@@ -112,7 +113,7 @@ optional arguments:
                         ~/.vipaccess
   -t TOKEN_MODEL, --token-model TOKEN_MODEL
                         VIP Access token model. Should be VSST (desktop token,
-                        default) or VSMT (mobile token). Some clients only
+                        default) or VSMT (mobile token), VSMB for HOTP token. Some clients only
                         accept one or the other.
 ```
 
@@ -154,6 +155,17 @@ qrencode -t ANSI256 'otpauth://totp/VIP%20Access:VSSTXXXX?secret=YYYY&issuer=Sym
 
 Scan the code into your TOTP generating app, like Authy.
 
+
+### Using HOTP
+
+Use VSMB as token type `vipaccess provision -p -t VSMB`
+Known Limitations:
+* No way to re-synchronize if token ever gets out of sync with VIP Server.
+* You should use HEX code with Yubikeys
+* Tokens have an expiry date similar TOTP tokens unlike Yubikey VIP Tokens.
+* First try may not work as we used that token to validate it.
+
+
 ### Generating access codes using an existing credential
 
 The `vipaccess [show]` option will also do this for you: by default it
@@ -161,6 +173,7 @@ generates codes based on the credential in `~/.vipaccess`, but you can
 specify an alternative credential file or specify the OATH "token
 secret" on the command line.
 
+Cannot be used with hotp tokens as of now.
 ```
 usage: vipaccess show [-h] [-s SECRET | -f DOTFILE]
 

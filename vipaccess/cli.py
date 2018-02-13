@@ -1,13 +1,18 @@
+#!/usr/bin/env python
+"""
+Cli tool to Access provision funcs
+"""
 from __future__ import print_function
 
-import os, sys
+import os
+import sys
 import argparse
 import oath
 import base64
 from vipaccess.patharg import PathType
 from vipaccess import provision as vp
 
-EXCL_WRITE = 'x' if sys.version_info>=(3,3) else 'wx'
+EXCL_WRITE = 'x' if sys.version_info>=(3, 3) else 'wx'
 
 # http://stackoverflow.com/a/26379693/20789
 
@@ -64,20 +69,29 @@ def provision(p, args):
         print('Credential created successfully:\n\t' + otp_uri)
         print("This credential expires on this date: " + otp_token['expiry'])
         print('\nYou will need the ID to register this credential: ' + otp_token['id'])
-        print('\nYou can use oathtool to generate the same OTP codes')
-        print('as would be produced by the official VIP Access apps:\n')
-        print('    oathtool -d6 -b --totp    {}  # 6-digit code'''.format(otp_secret_b32))
-        print('    oathtool -d6 -b --totp -v {}  # ... with extra information'''.format(otp_secret_b32))
+        if otp_token['id'].startswith('VSMB'):
+            otp_secret_hex = vp.decode_secret_hex(otp_secret)
+            print('Secret in HEX for Yubikey: '+ otp_secret_hex)
+        else:
+            print('\nYou can use oathtool to generate the same OTP codes')
+            print('as would be produced by the official VIP Access apps:\n')
+            print('    Token is Time based TOTP Token')
+            print('    oathtool -d6 -b --totp    {}  # 6-digit code'''.format(otp_secret_b32))
+            print('    oathtool -d6 -b --totp -v {}  # ... with extra information'''.format(otp_secret_b32))
     else:
-        assert otp_token['digits']==6
-        assert otp_token['algorithm']=='sha1'
-        assert otp_token['period']==30
+        assert otp_token['digits'] == 6
+        assert otp_token['algorithm'] == 'sha1'
+        if not otp_token['id'].startswith('VSMB'):
+            assert otp_token['period'] == 30
         os.umask(0o077) # stoken does this too (security)
         with open(os.path.expanduser(args.dotfile), EXCL_WRITE) as dotfile:
             dotfile.write('version 1\n')
             dotfile.write('secret %s\n' % otp_secret_b32)
             dotfile.write('id %s\n' % otp_token['id'])
             dotfile.write('expiry %s\n' % otp_token['expiry'])
+            if otp_token['id'].startswith('VSMB'):
+                # increase counter because we used 2 to test token
+                dotfile.write('count 2')
         print('Credential created and saved successfully: ' + dotfile.name)
         print('You will need the ID to register this credential: ' + otp_token['id'])
 
@@ -86,14 +100,19 @@ def show(p, args):
         secret = args.secret
     else:
         with open(args.dotfile, "r") as dotfile:
-            d = dict( l.strip().split(None, 1) for l in dotfile )
+            d = dict(l.strip().split(None, 1) for l in dotfile)
         if 'version' not in d:
             p.error('%s does not specify version' % args.dotfile)
         elif d['version'] != '1':
             p.error("%s specifies version %r, rather than expected '1'" % (args.dotfile, d['version']))
         elif 'secret' not in d:
             p.error('%s does not specify secret' % args.dotfile)
+        elif 'id' not in d:
+            p.error('%s does not contain and id' % args.dotfile)
+        if d.get('id').startswith('VSMB'):
+            p.error('HOTP token generation is not supported yet.')
         secret = d.get('secret')
+
         if args.verbose:
             if 'id' in d: print('Token ID: %s' % d['id'], file=sys.stderr)
             if 'expiry' in d: print('Token expiration: %s' % d['expiry'], file=sys.stderr)
@@ -118,11 +137,11 @@ def main():
     pprov.set_defaults(func=provision)
     m = pprov.add_mutually_exclusive_group()
     m.add_argument('-p', '--print', action=PrintAction, nargs=0,
-                   help="Print the new credential, but don't save it to a file")
+                    help="Print the new credential, but don't save it to a file")
     m.add_argument('-o', '--dotfile', type=PathType(type='file', exists=False), default=os.path.expanduser('~/.vipaccess'),
-                   help="File in which to store the new credential (default ~/.vipaccess")
-    pprov.add_argument('-t', '--token-model', default='VSST',
-                      help="VIP Access token model. Should be VSST (desktop token, default) or VSMT (mobile token). Some clients only accept one or the other.")
+                    help="File in which to store the new credential (default ~/.vipaccess")
+    pprov.add_argument('-t', '--token-model', default='VSMT',
+                    help="VIP Access token model. Should be VSST (desktop token, default) or VSMT (mobile token) or VSMB (HOTP). Some clients only accept one or the other.")
 
     pshow = sp.add_parser('show', help="Show the current 6-digit token")
     m = pshow.add_mutually_exclusive_group()
@@ -137,5 +156,5 @@ def main():
     args = p.parse_args()
     return args.func(p, args)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

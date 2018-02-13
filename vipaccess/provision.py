@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+"""
+Functions to Provision, Decrypt, Generate URI, Test and QR encode Token
+"""
 # -*- coding: utf-8 -*-
 #
 #   Copyright 2014 Forest Crossman
@@ -22,7 +26,6 @@ import binascii
 import hashlib
 import hmac
 import string
-import sys
 import time
 # Python 2/3 compatibility
 try:
@@ -35,6 +38,7 @@ from Crypto.Cipher import AES
 from Crypto.Random import random
 from lxml import etree
 from oath import totp
+from oath import hotp
 
 
 PROVISIONING_URL = 'https://services.vip.symantec.com/prov'
@@ -139,10 +143,12 @@ def get_token_from_response(response_xml):
         token['cipher'] = base64.b64decode(data.find('v:Cipher', ns).text)
         token['digest'] = base64.b64decode(data.find('v:Digest', ns).text)
         token['expiry'] = expiry.text
-        token['period'] = int(usage.find('v:TimeStep', ns).text)
-
+        if token['id'].startswith('VSMB'):
+            token['count'] = int(usage.find('v:Counter', ns).text)
+        else:
+            token['period'] = int(usage.find('v:TimeStep', ns).text)
         algorithm = usage.find('v:AI', ns).attrib['type'].split('-')
-        if len(algorithm)==4 and algorithm[0]=='HMAC' and algorithm[2]=='TRUNC' and algorithm[3].endswith('DIGITS'):
+        if len(algorithm) == 4 and algorithm[0] == 'HMAC' and algorithm[2] == 'TRUNC' and algorithm[3].endswith('DIGITS'):
             token['algorithm'] = algorithm[1].lower()
             token['digits'] = int(algorithm[3][:-6])
         else:
@@ -164,30 +170,52 @@ def decrypt_key(token_iv, token_cipher):
 
     return otp_key
 
+def decode_secret_hex(secret):
+    '''Get Secret in Hex For Yubikey'''
+    return binascii.b2a_hex(secret).decode('utf-8')
+
+
 def generate_otp_uri(token, secret):
     '''Generate the OTP URI.'''
     token_parameters = {}
-    token_parameters['otp_type'] = urllib.quote('totp')
     token_parameters['app_name'] = urllib.quote('VIP Access')
     token_parameters['account_name'] = urllib.quote(token['id'])
-    token_parameters['parameters'] = urllib.urlencode(
-        dict(
-            secret=base64.b32encode(secret).upper(),
-            digits=token['digits'],
-            period=token['period'],
-            algorithm=token['algorithm'],
-            issuer='Symantec'
+    if urllib.quote(token['id']).startswith('VSMB'):
+        token_parameters['otp_type'] = urllib.quote('hotp')
+        token_parameters['parameters'] = urllib.urlencode(
+            dict(
+                secret=base64.b32encode(secret).upper(),
+                digits=token['digits'],
+                count='2',
+                algorithm=token['algorithm'],
+                issuer='Symantec'
+                )
             )
-        )
+    else:
+        token_parameters['otp_type'] = urllib.quote('totp')
+        token_parameters['parameters'] = urllib.urlencode(
+            dict(
+                secret=base64.b32encode(secret).upper(),
+                digits=token['digits'],
+                period=token['period'],
+                algorithm=token['algorithm'],
+                issuer='Symantec'
+                )
+            )
 
     return 'otpauth://%(otp_type)s/%(app_name)s:%(account_name)s?%(parameters)s' % token_parameters
 
 def check_token(token_id, secret, session=requests):
     '''Check the validity of the generated token.'''
-    otp = totp(binascii.b2a_hex(secret).decode('utf-8'))
     test_url = 'https://vip.symantec.com/otpCheck'
+    if token_id.startswith('VSMB'):
+        print('Checking HOTP token with Counter=1')
+        otp = hotp(binascii.b2a_hex(secret), 1).decode('utf-8')
+    else:
+        print('Checking TOTP token with Current Time')
+        otp = totp(binascii.b2a_hex(secret).decode('utf-8'))
     token_check = session.post(
-        TEST_URL,
+        test_url,
         data={
             'cr1':otp[0],
             'cr2':otp[1],
@@ -196,6 +224,7 @@ def check_token(token_id, secret, session=requests):
             'cr5':otp[4],
             'cr6':otp[5],
             'cred':token_id,
+            'count':'1',
             'continue':'otp_check'
             }
         )
