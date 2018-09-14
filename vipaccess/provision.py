@@ -164,7 +164,7 @@ def decrypt_key(token_iv, token_cipher):
 
     return otp_key
 
-def generate_otp_uri(token, secret):
+def generate_otp_uri(token, secret, issuer='Symantec'):
     '''Generate the OTP URI.'''
     token_parameters = {}
     token_parameters['otp_type'] = urllib.quote('totp')
@@ -177,7 +177,7 @@ def generate_otp_uri(token, secret):
             digits=token.get('digits', 6),
             period=token.get('period', 30),
             algorithm=token.get('algorithm', 'SHA1').upper(),
-            issuer='Symantec'
+            issuer=issuer
             )
         )
 

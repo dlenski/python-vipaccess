@@ -60,7 +60,7 @@ def provision(p, args):
               file=sys.stderr)
 
     if args.print:
-        otp_uri = vp.generate_otp_uri(otp_token, otp_secret)
+        otp_uri = vp.generate_otp_uri(otp_token, otp_secret, args.issuer)
         print('Credential created successfully:\n\t' + otp_uri)
         print("This credential expires on this date: " + otp_token['expiry'])
         print('\nYou will need the ID to register this credential: ' + otp_token['id'])
@@ -100,7 +100,7 @@ def uri(p, args):
     except Exception as e:
         p.error('error interpreting secret as base32: %s' % e)
     print('Token URI:\n')
-    print('    ' + vp.generate_otp_uri(d, key))
+    print('    ' + vp.generate_otp_uri(d, key, args.issuer))
 
 def show(p, args):
     if args.secret:
@@ -142,6 +142,8 @@ def main():
                    help="Print the new credential, but don't save it to a file")
     m.add_argument('-o', '--dotfile', type=PathType(type='file', exists=False), default=os.path.expanduser('~/.vipaccess'),
                    help="File in which to store the new credential (default ~/.vipaccess)")
+    pprov.add_argument('-i', '--issuer', default="Symantec", action='store',
+                       help="Specify the issuer name to use (default: Symantec)")
     pprov.add_argument('-t', '--token-model', default='VSST',
                       help="VIP Access token model. Normally VSST (desktop token, default) or VSMT (mobile token). "
                            "Some clients only accept one or the other. Other more obscure token types also exist: "
@@ -153,6 +155,8 @@ def main():
                    help="Specify the token secret on the command line (base32 encoded)")
     m.add_argument('-f', '--dotfile', type=PathType(exists=True), default=os.path.expanduser('~/.vipaccess'),
                    help="File in which the credential is stored (default ~/.vipaccess)")
+    pshow.add_argument('-i', '--issuer', default="Symantec", action='store',
+                       help="Specify the issuer name to use (default: Symantec)")
     pshow.add_argument('-v', '--verbose', action='store_true')
     pshow.set_defaults(func=show)
 

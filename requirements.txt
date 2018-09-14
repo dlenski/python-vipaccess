@@ -1,0 +1,4 @@
+lxml==4.2.5
+pycryptodome==3.6.6
+oath>=1.4.1
+requests

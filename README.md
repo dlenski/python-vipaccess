@@ -47,14 +47,16 @@ new token.
 Dependencies
 ------------
 
--  Python 2.7, 3.3, 3.4, 3.5
--  [`lxml`](https://pypi.python.org/pypi/lxml/3.4.0)
--  [`oath`](https://pypi.python.org/pypi/oath/1.2)
--  [`pycryptodome`](https://pypi.python.org/pypi/pycryptodome/3.4.7)
--  [`requests`](https://pypi.python.org/pypi/requests/)
+-  Python 2.7, 3.3, 3.4, 3.5, 3.6
+-  [`lxml`](https://pypi.python.org/pypi/lxml/4.2.5)
+-  [`oath`](https://pypi.python.org/pypi/oath/1.4.1)
+-  [`pycryptodome`](https://pypi.python.org/pypi/pycryptodome/3.6.6)
+-  [`requests`](https://pypi.python.org/pypi/requests)
 
-If you have `pip` installed on your system, you can install them with
-`pip install lxml oath pycryptodome requests`.
+If you have `pip` installed on your system, you can easily install the dependencies by running
+`pip install -r requirements.txt` in the project root directory.
+
+To install `pip` see the `pip` installation documentation [here](https://pip.pypa.io/en/stable/installing/).
 
 Manual
 ------

@@ -5,6 +5,11 @@ __pycache__/
 # C extensions
 *.so
 
+# emacs guano
+*~
+.*~
+\#*
+
 # Distribution / packaging
 .Python
 env/
@@ -54,3 +59,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# pyenv
+/.python-version
