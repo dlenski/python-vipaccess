@@ -31,7 +31,7 @@ setup(
     install_requires=[
         'lxml==4.2.5',
         'oath>=1.4.1',
-        'pycryptodome==3.6.6',
+        'pycryptodome>=3.6.6',
         'requests',
     ],
     entry_points={
