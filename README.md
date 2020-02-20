@@ -174,6 +174,37 @@ optional arguments:
                         ~/.vipaccess
 ```
 
+Usage with a Docker container
+-----
+You can generate tokens without modifying your desktop machine if you have docker installed.
+
+### Build the Docker container from this tree
+This assumes you have the GIT repository checked out and are in a terminal in the root of the repo.
+The assembled Docker image is relatively lightweight at 150MB.
+Build the `python-vipaccess` container with
+```
+docker build . -t python-vipaccess
+```
+
+### Provisioning a new VIP Access credential
+Generate the otp string for the TOTP applications. 
+This URL can also be used to import the generated credentials as an additional identifer in a Symantec VIP application.
+```
+docker run python-vipaccess provision -p
+```
+
+### Display a QR code to register your credential with mobile TOTP apps
+Convert the URL into a scannable QR code using `qrencode` bundled with the 
+container.  The scannable QR code will display using ANSI graphics in a terminal window.
+
+Replace `otpauth://` with the otpauth string generated in the step above. 
+```
+docker run --entrypoint "qrencode" python-vipaccess -t ANSI256 otpauth://...
+```
+
+NOTES
+-----
+
 As alluded to above, you can use other standard
 [OATH](https://en.wikipedia.org/wiki/Initiative_For_Open_Authentication)-based
 tools to generate the 6-digit codes identical to what Symantec's official
