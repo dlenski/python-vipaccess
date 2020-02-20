@@ -6,7 +6,7 @@ with open('description.rst', encoding='utf-8') as f:
 
 setup(
     name='python-vipaccess',
-    version='0.10.3',
+    version='0.11',
     description="A free software implementation of Symantec's VIP Access application and protocol",
     long_description=description,
     url='https://github.com/dlenski/python-vipaccess',
@@ -14,7 +14,7 @@ setup(
     author_email='dlenski@gmail.com',
     license='Apache 2.0',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
@@ -25,6 +25,9 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     keywords='development',
     packages=['vipaccess'],
