@@ -17,6 +17,11 @@ Table of Contents
       * [Provisioning a new VIP Access credential](#provisioning-a-new-vip-access-credential)
       * [Display a QR code to register your credential with mobile TOTP apps](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps)
       * [Generating access codes using an existing credential](#generating-access-codes-using-an-existing-credential)
+  * [Usage with a docker container](#usage-with-a-docker-container)
+      * [Build the Docker container from this tree](#build-the-docker-container-from-this-tree)
+      * [Provisining a new VIP Access credential with Docker](#provisioning-a-new-vip-access-credential-with-docker)
+      * [Display a QR code to register your credential with mobile TOTP apps with Docker](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps-with-docker)
+  * [Notes](#notes)
 
 This is a fork of [**`cyrozap/python-vipaccess`**](https://github.com/dlenski/python-vipaccess). Main differences:
 
@@ -186,14 +191,14 @@ Build the `python-vipaccess` container with
 docker build . -t python-vipaccess
 ```
 
-### Provisioning a new VIP Access credential
+### Provisioning a new VIP Access credential with Docker
 Generate the otp string for the TOTP applications. 
 This URL can also be used to import the generated credentials as an additional identifer in a Symantec VIP application.
 ```
 docker run python-vipaccess provision -p
 ```
 
-### Display a QR code to register your credential with mobile TOTP apps
+### Display a QR code to register your credential with mobile TOTP apps with Docker
 Convert the URL into a scannable QR code using `qrencode` bundled with the 
 container.  The scannable QR code will display using ANSI graphics in a terminal window.
 
