@@ -17,11 +17,11 @@ Table of Contents
       * [Provisioning a new VIP Access credential](#provisioning-a-new-vip-access-credential)
       * [Display a QR code to register your credential with mobile TOTP apps](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps)
       * [Generating access codes using an existing credential](#generating-access-codes-using-an-existing-credential)
-  * [Usage with a docker container](#usage-with-a-docker-container)
+   * [Usage with a docker container](#usage-with-a-docker-container)
       * [Build the Docker container from this tree](#build-the-docker-container-from-this-tree)
       * [Provisining a new VIP Access credential with Docker](#provisioning-a-new-vip-access-credential-with-docker)
       * [Display a QR code to register your credential with mobile TOTP apps with Docker](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps-with-docker)
-  * [Notes](#notes)
+   * [Notes](#notes)
 
 This is a fork of [**`cyrozap/python-vipaccess`**](https://github.com/dlenski/python-vipaccess). Main differences:
 
