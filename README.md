@@ -193,7 +193,7 @@ docker build . -t python-vipaccess
 
 ### Provisioning a new VIP Access credential with Docker
 Generate the otp string for the TOTP applications. 
-This URL can also be used to import the generated credentials as an additional identifer in a Symantec VIP application.
+This URL can also be used to import the generated credentials as an additional identifier in a Symantec VIP application.
 ```
 docker run python-vipaccess provision -p
 ```
