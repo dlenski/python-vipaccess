@@ -103,7 +103,7 @@ or instead just print out the "token secret" string with instructions
 about how to use it.
 
 ```
-usage: vipaccess provision [-h] [-p | -o DOTFILE] [-t TOKEN_MODEL]
+usage: vipaccess provision [-h] [-p | -o DOTFILE] [-i ISSUER] [-t TOKEN_MODEL]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -111,6 +111,8 @@ optional arguments:
   -o DOTFILE, --dotfile DOTFILE
                         File in which to store the new credential (default
                         ~/.vipaccess)
+  -i ISSUER
+                        Change the issuer string from Symantec to something else
   -t TOKEN_MODEL, --token-model TOKEN_MODEL
                         VIP Access token model. Normally VSST (desktop token,
                         default) or VSMT (mobile token). Some clients only
@@ -156,8 +158,11 @@ $ qrencode -t UTF8 'otpauth://totp/VIP%20Access:VSSTXXXX?secret=YYYY&issuer=Syma
 ```
 
 Scan the code into your TOTP generating app,
-like [FreeOTP](https://freeotp.github.io/) or
-[Google Authenticator](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2).
+like 
+- [FreeOTP](https://freeotp.github.io/) 
+- Google Authenticator for [Android](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2) or [IOS](https://apps.apple.com/us/app/google-authenticator/id388497605)
+- Microsoft Authenticator for [Android](https://play.google.com/store/apps/details?id=com.azure.authenticator) or [IOS](https://apps.apple.com/us/app/microsoft-authenticator/id983156458)
+
 
 ### Generating access codes using an existing credential
 
@@ -196,6 +201,10 @@ Generate the otp string for the TOTP applications.
 This URL can also be used to import the generated credentials as an additional identifier in a Symantec VIP application.
 ```
 docker run python-vipaccess provision -p
+```
+or the following if you wish to change the ID prefix to something like `SYMC`
+```
+docker run python-vipaccess provision -p -t SYMC
 ```
 
 ### Display a QR code to register your credential with mobile TOTP apps with Docker
