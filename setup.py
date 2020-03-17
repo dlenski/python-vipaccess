@@ -6,7 +6,7 @@ with open('description.rst', encoding='utf-8') as f:
 
 setup(
     name='python-vipaccess',
-    version='0.11',
+    version='0.12',
     description="A free software implementation of Symantec's VIP Access application and protocol",
     long_description=description,
     url='https://github.com/dlenski/python-vipaccess',
@@ -39,7 +39,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'vipaccess=vipaccess.cli:main',
+            'vipaccess=vipaccess.__main__:main',
         ],
     },
     test_requires=[

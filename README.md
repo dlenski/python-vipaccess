@@ -34,7 +34,7 @@ This is a fork of [**`cyrozap/python-vipaccess`**](https://github.com/dlenski/py
   real difference between them, but some clients require one or the
   other specifically. There are also some rarer token types/prefixes
   which can be generated if necessary
-  ([reference list from Symantec](https://support.symantec.com/en_US/article.TECH239895.html))
+  ([reference list from Symantec](https://support.symantec.com/us/en/article.tech239895.html)
 - Command-line utility is expanded to support *both* token
   provisioning (creating a new token) and emitting codes for an
   existing token (inspired by the command-line interface of
