@@ -6,7 +6,7 @@ with open('description.rst', encoding='utf-8') as f:
 
 setup(
     name='python-vipaccess',
-    version='0.12',
+    version='0.13',
     description="A free software implementation of Symantec's VIP Access application and protocol",
     long_description=description,
     url='https://github.com/dlenski/python-vipaccess',

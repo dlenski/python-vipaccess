@@ -3,6 +3,7 @@ from __future__ import print_function
 import os, sys
 import argparse
 import oath
+import time
 import base64
 from vipaccess.patharg import PathType
 from vipaccess import provision as vp
@@ -45,7 +46,7 @@ argparse.ArgumentParser.set_default_subparser = set_default_subparser
 def provision(p, args):
     print("Generating request...")
     request = vp.generate_request(token_model=args.token_model)
-    print("Fetching provisioning response...")
+    print("Fetching provisioning response from Symantec server...")
     session = vp.requests.Session()
     response = vp.get_provisioning_response(request, session)
     print("Getting token from response...")
@@ -53,7 +54,7 @@ def provision(p, args):
     print("Decrypting token...")
     otp_secret = vp.decrypt_key(otp_token['iv'], otp_token['cipher'])
     otp_secret_b32 = base64.b32encode(otp_secret).upper().decode('ascii')
-    print("Checking token...")
+    print("Checking token against Symantec server...")
     if not vp.check_token(otp_token, otp_secret, session):
         print("WARNING: Something went wrong--the token could not be validated.\n",
               "    (check your system time; it differs from the server's by %d seconds)\n" % otp_token['timeskew'],
@@ -83,10 +84,52 @@ def provision(p, args):
     else:
         p.error('Cannot currently save a token of this type (try -p to print)')
 
+def check(p, args):
+    if args.secret:
+        d, secret = {'id': args.identity or 'Unknown'}, args.secret
+    else:
+        with open(args.dotfile, "r") as dotfile:
+            d = dict( l.strip().split(None, 1) for l in dotfile )
+        if 'version' not in d:
+            p.error('%s does not specify version' % args.dotfile)
+        elif d['version'] != '1':
+            p.error("%s specifies version %r, rather than expected '1'" % (args.dotfile, d['version']))
+        elif 'secret' not in d:
+            p.error('%s does not specify secret' % args.dotfile)
+        secret = d['secret']
+
+    if not args.identity:
+        p.error("Token identity unknown; specify with -I/--identity")
+
+    try:
+        key = oath.google_authenticator.lenient_b32decode(secret)
+    except Exception as e:
+        p.error('error interpreting secret as base32: %s' % e)
+
+    d.setdefault('period', 30)
+
+    print("Checking token...")
+    session = vp.requests.Session()
+    for skew in (None, +d['period']//2, -d['period']//2, +d['period'], -d['period'], +d['period']*3//2, -d['period']*3//2):
+        if skew is None:
+            if vp.check_token(d, key, session):
+                print("Token is valid and working.")
+                break
+        else:
+            print("Trying %+d seconds timeskew..." % skew)
+            if vp.check_token(d, key, session, timestamp=time.time()+skew):
+                print("Token is valid and working, but we had to skew by %+d seconds (check your system time)\n" % skew)
+                break
+    else:
+        print("WARNING: Something went wrong--the token could not be validated.\n",
+              file=sys.stderr)
+
 def uri(p, args):
     if args.secret:
-        d, secret = {}, args.secret
+        d, secret = {'id': args.identity or 'Unknown'}, args.secret
     else:
+        if not os.path.exists(args.dotfile):
+            p.error("File %s does not exist." % args.dotfile)
         with open(args.dotfile, "r") as dotfile:
             d = dict( l.strip().split(None, 1) for l in dotfile )
         if 'version' not in d:
@@ -131,44 +174,57 @@ def show(p, args):
 def main():
     p = argparse.ArgumentParser()
 
-    class PrintAction(argparse.Action):
+    class UnsetDotfileAndStore(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            setattr(namespace, 'print', True)
+            # We need to unset dotfile so that PathType() doesn't try to check for its existence/nonexistence
             setattr(namespace, 'dotfile', None)
+            setattr(namespace, self.dest, True if not values else values[0] if len(values)==1 else values)
 
     sp = p.add_subparsers(dest='cmd')
 
     pprov = sp.add_parser('provision', help='Provision a new VIP Access credential')
     pprov.set_defaults(func=provision)
     m = pprov.add_mutually_exclusive_group()
-    m.add_argument('-p', '--print', action=PrintAction, nargs=0,
+    m.add_argument('-p', '--print', action=UnsetDotfileAndStore, nargs=0,
                    help="Print the new credential, but don't save it to a file")
     m.add_argument('-o', '--dotfile', type=PathType(type='file', exists=False), default=os.path.expanduser('~/.vipaccess'),
                    help="File in which to store the new credential (default ~/.vipaccess)")
     pprov.add_argument('-i', '--issuer', default="Symantec", action='store',
                        help="Specify the issuer name to use (default: Symantec)")
     pprov.add_argument('-t', '--token-model', default='VSST',
-                      help="VIP Access token model. Normally VSST (desktop token, default) or VSMT (mobile token). "
+                      help="VIP Access token model. Often VSST (desktop token, default) or VSMT (mobile token) or SYMC. "
                            "Some clients only accept one or the other. Other more obscure token types also exist: "
                            "https://support.symantec.com/en_US/article.TECH239895.html")
 
+    pcheck = sp.add_parser('check', help='Check if a VIP Access credential is working')
+    m = pcheck.add_mutually_exclusive_group()
+    m.add_argument('-f', '--dotfile', type=PathType(type='file', exists=True), default=os.path.expanduser('~/.vipaccess'),
+                   help="File in which the credential is stored (default ~/.vipaccess)")
+    m.add_argument('-s', '--secret', action=UnsetDotfileAndStore, nargs=1,
+                   help="Specify the token secret to test (base32 encoded)")
+    pcheck.add_argument('-I', '--identity',
+                       help="Specify the ID of the token to test (normally starts with VS or SYMC)")
+    pcheck.set_defaults(func=check)
+
     pshow = sp.add_parser('show', help="Show the current 6-digit token")
     m = pshow.add_mutually_exclusive_group()
-    m.add_argument('-s', '--secret',
+    m.add_argument('-s', '--secret', action=UnsetDotfileAndStore, nargs=1,
                    help="Specify the token secret on the command line (base32 encoded)")
-    m.add_argument('-f', '--dotfile', type=PathType(exists=True), default=os.path.expanduser('~/.vipaccess'),
+    m.add_argument('-f', '--dotfile', type=PathType(type='file', exists=True), default=os.path.expanduser('~/.vipaccess'),
                    help="File in which the credential is stored (default ~/.vipaccess)")
     pshow.add_argument('-v', '--verbose', action='store_true')
     pshow.set_defaults(func=show)
 
     puri = sp.add_parser('uri', help="Export the credential as a URI (otpauth://)")
     m = puri.add_mutually_exclusive_group()
-    m.add_argument('-s', '--secret',
+    m.add_argument('-s', '--secret',  action=UnsetDotfileAndStore, nargs=1,
                    help="Specify the token secret on the command line (base32 encoded)")
-    m.add_argument('-f', '--dotfile', type=PathType(exists=True), default=os.path.expanduser('~/.vipaccess'),
+    m.add_argument('-f', '--dotfile', type=PathType(type='file', exists=True), default=os.path.expanduser('~/.vipaccess'),
                    help="File in which the credential is stored (default ~/.vipaccess)")
     puri.add_argument('-i', '--issuer', default="Symantec", action='store',
                        help="Specify the issuer name to use (default: Symantec)")
+    puri.add_argument('-I', '--identity', action='store',
+                       help="Specify the ID of the token to use (required with --secret))")
     puri.set_defaults(func=uri)
 
     p.set_default_subparser('show')

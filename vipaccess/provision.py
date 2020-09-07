@@ -119,8 +119,11 @@ def get_token_from_response(response_xml):
 
     tree = etree.fromstring(response_xml)
     result = tree.find('v:Status/v:StatusMessage', ns).text
+    reasoncode = tree.find('v:Status/v:ReasonCode', ns).text
 
-    if result == 'Success':
+    if result != 'Success':
+        raise RuntimeError(result, reasoncode)
+    else:
         token = {}
         token['timeskew'] = time.time() - int(tree.find('v:UTCTimestamp', ns).text)
         container = tree.find('v:SecretContainer', ns)
@@ -191,13 +194,13 @@ def generate_otp_uri(token, secret, issuer='Symantec'):
     token_parameters['parameters'] = urllib.urlencode(data)
     return 'otpauth://%(otp_type)s/%(app_name)s:%(account_name)s?%(parameters)s' % token_parameters
 
-def check_token(token, secret, session=requests):
+def check_token(token, secret, session=requests, timestamp=None):
     '''Check the validity of the generated token.'''
     secret_b32 = binascii.b2a_hex(secret).decode('ascii')
     if token.get('counter') is not None: # HOTP
         otp = hotp(secret_b32, counter=token['counter'])
     elif token.get('period'): # TOTP
-        otp = totp(secret_b32, period=token['period'])
+        otp = totp(secret_b32, period=token['period'], t=timestamp)
     else: # Assume TOTP with default period 30 (FIXME)
         otp = totp(secret_b32)
     data = {'cr%s'%d:c for d,c in enumerate(otp, 1)}

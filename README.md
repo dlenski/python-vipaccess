@@ -1,3 +1,9 @@
+| **IMPORTANT!** |
+| -------------- |
+| As of May 17, 2020, `python-vipaccess` stopped working for provisioning new Symantec VIP Access tokens (which was its raison d'être). |
+| As of May 27, 2020, it's working again. |
+| It might stop working again. and we might not be able to get it to work again [(see #39)](https://github.com/dlenski/python-vipaccess/issues/39#issuecomment-628741743) |
+
 python-vipaccess
 ================
 
@@ -34,7 +40,7 @@ This is a fork of [**`cyrozap/python-vipaccess`**](https://github.com/dlenski/py
   real difference between them, but some clients require one or the
   other specifically. There are also some rarer token types/prefixes
   which can be generated if necessary
-  ([reference list from Symantec](https://support.symantec.com/us/en/article.tech239895.html)
+  ([reference list from Symantec](https://support.symantec.com/us/en/article.tech239895.html))
 - Command-line utility is expanded to support *both* token
   provisioning (creating a new token) and emitting codes for an
   existing token (inspired by the command-line interface of
@@ -44,7 +50,7 @@ Intro
 -----
 
 python-vipaccess is a free and open source software (FOSS)
-implementation of Symantec's VIP Access client.
+implementation of Symantec's VIP Access client (now owned by Broadcom).
 
 If you need to access a network which uses VIP Access for [two-factor
 authentication](https://en.wikipedia.org/wiki/Two-factor_authentication),
@@ -70,7 +76,7 @@ Dependencies
 -  [`pycryptodome`](https://pypi.python.org/pypi/pycryptodome/3.6.6)
 -  [`requests`](https://pypi.python.org/pypi/requests)
 
-For development purposes, you can install the dependencies with `pip install -r requirements.txt` in 
+For development purposes, you can install the dependencies with `pip install -r requirements.txt` in
 the project root directory.
 
 To install `pip` see the [`pip` installation documentation](https://pip.pypa.io/en/stable/installing/).
@@ -96,8 +102,11 @@ Usage
 
 ### Provisioning a new VIP Access credential
 
-This is used to create a new VIP Access token: by default, it stores
-the new credential in the file `.vipaccess` in your home directory (in a
+This is used to create a new VIP Access token. It connects to https://services.vip.symantec.com/prov
+and requests a new token, then deobfuscates it, and checks whether it is properly decoded and 
+working correctly, via a second request to https://vip.symantec.com/otpCheck.
+
+By default it stores the new token in the file `.vipaccess` in your home directory (in a
 format similar to `stoken`), but it can store to another file instead,
 or instead just print out the "token secret" string with instructions
 about how to use it.
@@ -111,12 +120,12 @@ optional arguments:
   -o DOTFILE, --dotfile DOTFILE
                         File in which to store the new credential (default
                         ~/.vipaccess)
-  -i ISSUER
-                        Change the issuer string from Symantec to something else
+  -i ISSUER, --issuer ISSUER
+                        Specify the issuer name to use (default: Symantec)
   -t TOKEN_MODEL, --token-model TOKEN_MODEL
-                        VIP Access token model. Normally VSST (desktop token,
-                        default) or VSMT (mobile token). Some clients only
-                        accept one or the other. Other more obscure token
+                        VIP Access token model. Often VSST (desktop token,
+                        default) or VSMT (mobile token) or SYMC. Some clients
+                        only accept one or the other. Other more obscure token
                         types also exist:
                         https://support.symantec.com/en_US/article.TECH239895.html
 ```
@@ -124,6 +133,11 @@ optional arguments:
 Here is an example of the output from `vipaccess provision -p`:
 
 ```
+Generating request...
+Fetching provisioning response from Symantec server...
+Getting token from response...
+Decrypting token...
+Checking token against Symantec server...
 Credential created successfully:
 	otpauth://totp/VIP%20Access:VSST12345678?secret=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&issuer=Symantec&algorithm=SHA1&digits=6
 This credential expires on this date: 2019-01-15T12:00:00.000Z
