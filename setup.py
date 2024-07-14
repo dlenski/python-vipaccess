@@ -1,14 +1,21 @@
+#!/usr/bin/env python3
 from setuptools import setup
 from io import open
+from os import path
 
-with open('description.rst', encoding='utf-8') as f:
-    description = f.read()
+version_py = path.join('vipaccess', 'version.py')
+
+d = {}
+with open(version_py, 'r') as fh:
+    exec(fh.read(), d)
+    version_pep = d['__version__']
 
 setup(
     name='python-vipaccess',
-    version='0.13',
+    version=version_pep,
     description="A free software implementation of Symantec's VIP Access application and protocol",
-    long_description=description,
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     url='https://github.com/dlenski/python-vipaccess',
     author='Daniel Lenski',
     author_email='dlenski@gmail.com',
@@ -42,8 +49,5 @@ setup(
             'vipaccess=vipaccess.__main__:main',
         ],
     },
-    test_requires=[
-        'nose>=1.0',
-    ],
-    test_suite='nose.collector',
+    test_suite='nose2.collector.collector',
 )
