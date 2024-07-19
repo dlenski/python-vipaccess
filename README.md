@@ -1,27 +1,25 @@
-python-vipaccess
-================
+# python-vipaccess
 
 [![PyPI](https://img.shields.io/pypi/v/python-vipaccess.svg)](https://pypi.python.org/pypi/python-vipaccess)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://github.com/dlenski/python-vipaccess/workflows/test_and_release/badge.svg)](https://github.com/dlenski/python-vipaccess/actions?query=workflow%3Atest_and_release)
 
-Table of Contents
-=================
+## Table of Contents
 
-* [python-vipaccess](#python-vipaccess)
-* [Table of Contents](#table-of-contents)
-   * [Intro](#intro)
-   * [Dependencies](#dependencies)
-   * [Installation](#installation)
-   * [Usage](#usage)
-      * [Provisioning a new VIP Access credential](#provisioning-a-new-vip-access-credential)
-      * [Display a QR code to register your credential with mobile TOTP apps](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps)
-      * [Generating access codes using an existing credential](#generating-access-codes-using-an-existing-credential)
-   * [Usage with a docker container](#usage-with-a-docker-container)
-      * [Build the Docker container from this tree](#build-the-docker-container-from-this-tree)
-      * [Provisining a new VIP Access credential with Docker](#provisioning-a-new-vip-access-credential-with-docker)
-      * [Display a QR code to register your credential with mobile TOTP apps with Docker](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps-with-docker)
-   * [Notes](#notes)
+- [python-vipaccess](#python-vipaccess)
+  - [Table of Contents](#table-of-contents)
+  - [Intro](#intro)
+  - [Dependencies](#dependencies)
+    - [Installation](#installation)
+  - [Usage](#usage)
+    - [Provisioning a new VIP Access credential](#provisioning-a-new-vip-access-credential)
+    - [Display a QR code to register your credential with mobile TOTP apps](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps)
+    - [Generating access codes using an existing credential](#generating-access-codes-using-an-existing-credential)
+      - [Usage with a Docker container](#usage-with-a-docker-container)
+      - [Build the Docker container from this tree](#build-the-docker-container-from-this-tree)
+    - [Provisioning a new VIP Access credential with Docker](#provisioning-a-new-vip-access-credential-with-docker)
+    - [Display a QR code to register your credential with mobile TOTP apps with Docker](#display-a-qr-code-to-register-your-credential-with-mobile-totp-apps-with-docker)
+  - [NOTES](#notes)
 
 This is a fork of [**`cyrozap/python-vipaccess`**](https://github.com/dlenski/python-vipaccess). Main differences:
 
@@ -40,8 +38,7 @@ This is a fork of [**`cyrozap/python-vipaccess`**](https://github.com/dlenski/py
   existing token (inspired by the command-line interface of
   [`stoken`](https://github.com/cernekee/stoken), which handles the same functions for [RSA SecurID](https://en.wikipedia.org/wiki/RSA_SecurID) tokens
 
-Intro
------
+## Intro
 
 python-vipaccess is a free and open source software (FOSS)
 implementation of Symantec's VIP Access client (now owned by Broadcom).
@@ -62,28 +59,26 @@ for generating the 6-digit codes that it outputs. The only
 non-standard part is the **provisioning** protocol used to create a
 new token.
 
-Dependencies
-------------
+## Dependencies
 
--  Python 3.3+ (recommended) or 2.7 (not recommended)
--  [`oath`](https://pypi.python.org/pypi/oath/1.4.1)
--  [`pycryptodome`](https://pypi.python.org/pypi/pycryptodome/3.6.6)
--  [`requests`](https://pypi.python.org/pypi/requests)
+- Python 3.3+ (recommended) or 2.7 (not recommended)
+- [`oath`](https://pypi.python.org/pypi/oath/1.4.1)
+- [`pycryptodome`](https://pypi.python.org/pypi/pycryptodome/3.6.6)
+- [`requests`](https://pypi.python.org/pypi/requests)
 
 For development purposes, you can install the dependencies with `pip install -r requirements.txt` in
 the project root directory.
 
 To install `pip` see the [`pip` installation documentation](https://pip.pypa.io/en/stable/installing/).
 
-Installation
-------------
+### Installation
 
 Install with [`pip3`](https://pip.pypa.io/en/stable/installing/) to automatically fetch Python
 dependencies. (Note that on most systems, `pip3` invokes the Python 3.x version, while `pip` invokes
 the Python 2.7 version; Python 2.7 is still supported, but not recommended because it's nearing
 obsolescence.)
 
-```
+```bash
 # Install latest release from PyPI
 $ pip3 install python-vipaccess
 
@@ -91,8 +86,7 @@ $ pip3 install python-vipaccess
 $ pip3 install https://github.com/dlenski/python-vipaccess/archive/HEAD.zip
 ```
 
-Usage
------
+## Usage
 
 ### Provisioning a new VIP Access credential
 
@@ -105,7 +99,7 @@ format similar to `stoken`), but it can store to another file instead,
 or instead just print out the "token secret" string with instructions
 about how to use it.
 
-```
+```bash
 usage: vipaccess provision [-h] [-p | -o DOTFILE] [-i ISSUER] [-t TOKEN_MODEL]
 
 optional arguments:
@@ -126,14 +120,14 @@ optional arguments:
 
 Here is an example of the output from `vipaccess provision -p`:
 
-```
+```log
 Generating request...
 Fetching provisioning response from Symantec server...
 Getting token from response...
 Decrypting token...
 Checking token against Symantec server...
 Credential created successfully:
-	otpauth://totp/VIP%20Access:SYMC12345678?secret=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&issuer=Symantec&algorithm=SHA1&digits=6
+    otpauth://totp/VIP%20Access:SYMC12345678?secret=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&issuer=Symantec&algorithm=SHA1&digits=6
 This credential expires on this date: 2019-01-15T12:00:00.000Z
 
 You will need the ID to register this credential: SYMC12345678
@@ -149,7 +143,7 @@ Here is the format of the `.vipaccess` token file output from
 `vipaccess provision [-o ~/.vipaccess]`. (This file is created with
 read/write permissions *only* for the current user.)
 
-```
+```log
 version 1
 secret AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 id SYMC12345678
@@ -161,16 +155,15 @@ expiry 2019-01-15T12:00:00.000Z
 Once you generate a token with `vipaccess provision`, use `vipaccess uri` to show the `otpauth://` URI and
 [`qrencode`](https://fukuchi.org/works/qrencode/manual/index.html) to display that URI as a QR code:
 
-```
-$ qrencode -t UTF8 'otpauth://totp/VIP%20Access:SYMCXXXX?secret=YYYY&issuer=Symantec&algorithm=SHA1&digits=6'
+```bash
+qrencode -t UTF8 'otpauth://totp/VIP%20Access:SYMCXXXX?secret=YYYY&issuer=Symantec&algorithm=SHA1&digits=6'
 ```
 
-Scan the code into your TOTP generating app,
-like 
-- [FreeOTP](https://freeotp.github.io/) 
+Scan the code into your TOTP generating app, like
+
+- [FreeOTP](https://freeotp.github.io/)
 - Google Authenticator for [Android](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2) or [IOS](https://apps.apple.com/us/app/google-authenticator/id388497605)
 - Microsoft Authenticator for [Android](https://play.google.com/store/apps/details?id=com.azure.authenticator) or [IOS](https://apps.apple.com/us/app/microsoft-authenticator/id983156458)
-
 
 ### Generating access codes using an existing credential
 
@@ -179,7 +172,7 @@ generates codes based on the credential in `~/.vipaccess`, but you can
 specify an alternative credential file or specify the OATH "token
 secret" on the command line.
 
-```
+```bash
 usage: vipaccess show [-h] [-s SECRET | -f DOTFILE]
 
 optional arguments:
@@ -192,40 +185,47 @@ optional arguments:
                         ~/.vipaccess
 ```
 
-Usage with a Docker container
------
+#### Usage with a Docker container
+
 You can generate tokens without modifying your desktop machine if you have docker installed.
 
-### Build the Docker container from this tree
+#### Build the Docker container from this tree
+
 This assumes you have the GIT repository checked out and are in a terminal in the root of the repo.
 The assembled Docker image is relatively lightweight at 150MB.
 Build the `python-vipaccess` container with
-```
+
+```bash
 docker build . -t python-vipaccess
 ```
 
 ### Provisioning a new VIP Access credential with Docker
-Generate the otp string for the TOTP applications. 
+
+Generate the otp string for the TOTP applications.
 This URL can also be used to import the generated credentials as an additional identifier in a Symantec VIP application.
-```
+
+```bash
 docker run python-vipaccess provision -p
 ```
+
 or the following if you wish to change the ID prefix to something like `SYMC`
-```
+
+```bash
 docker run python-vipaccess provision -p -t SYMC
 ```
 
 ### Display a QR code to register your credential with mobile TOTP apps with Docker
-Convert the URL into a scannable QR code using `qrencode` bundled with the 
+
+Convert the URL into a scannable QR code using `qrencode` bundled with the
 container.  The scannable QR code will display using ANSI graphics in a terminal window.
 
-Replace `otpauth://` with the otpauth string generated in the step above. 
-```
+Replace `otpauth://` with the otpauth string generated in the step above.
+
+```bash
 docker run --entrypoint "qrencode" python-vipaccess -t ANSI256 otpauth://...
 ```
 
-NOTES
------
+## NOTES
 
 As alluded to above, you can use other standard
 [OATH](https://en.wikipedia.org/wiki/Initiative_For_Open_Authentication)-based
