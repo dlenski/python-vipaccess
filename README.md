@@ -78,9 +78,12 @@ dependencies. (Note that on most systems, `pip3` invokes the Python 3.x version,
 the Python 2.7 version; Python 2.7 is still supported, but not recommended because it's nearing
 obsolescence.)
 
-```
+```console
 # Install latest release from PyPI
 $ pip3 install python-vipaccess
+
+# Optional - install the version which prints out a QR code (instead of using qrencode)
+$ pip3 install 'python-vipaccess[qr]'
 
 # Install latest development version from GitHub
 $ pip3 install https://github.com/dlenski/python-vipaccess/archive/HEAD.zip
